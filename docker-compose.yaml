@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+  web-link-extractor:
+    build: .
+    volumes:
+      - ./data:/app/data
+    # 아래 커맨드를 원하는 인자로 수정하세요
+    # command: --url https://example.com --output /app/data/links.csv
