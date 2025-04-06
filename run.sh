@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# src 디렉토리로 이동
+cd src
+
 # 필요한 디렉토리 생성
 mkdir -p data
 
@@ -13,8 +16,11 @@ echo "사용 예시:"
 echo "1. 웹 URL에서 링크 추출:"
 echo "   docker run -v \$(pwd)/data:/app/data web-link-extractor --url https://example.com --output /app/data/links.csv"
 echo ""
-echo "2. 로컬 HTML 파일에서 링크 추출 (data/samples 디렉토리 내 파일):"
+echo "2. 로컬 HTML 파일에서 링크 추출 (src/data/samples 디렉토리 내 파일):"
 echo "   docker run -v \$(pwd)/data:/app/data web-link-extractor --directory /app/data/samples --output /app/data/links.csv"
 echo ""
 echo "도움말 보기:"
 echo "   docker run web-link-extractor --help"
+
+# 메인 디렉토리로 돌아가기 (필요한 경우)
+cd ..
