@@ -1,97 +1,87 @@
-# WebLinkExtractor
+# Docker로 WebLinkExtractor 실행하기
 
-WebLinkExtractor는 웹페이지나 로컬 HTML 파일에서 외부 링크를 추출하는 파이썬 도구입니다. 이 도구는 다양한 소스에서 링크를 수집하여 CSV 형식으로 저장합니다.
+이 가이드는 Python 환경이 설치되어 있지 않은 시스템에서도 Docker를 사용하여 WebLinkExtractor를 실행하는 방법을 설명합니다.
 
-## 특징
+## 사전 요구사항
 
-- **다양한 소스 지원**: 웹 URL 또는 로컬 HTML 파일에서 링크 추출
-- **필터링 기능**: `javascript:void(0)` 링크와 내부 앵커 링크(#)는 자동으로 제외
-- **상대 URL 변환**: 상대 경로를 자동으로 절대 URL로 변환
-- **스크립트 태그 검색**: `<a>` 태그뿐만 아니라 스크립트 내의 URL도 추출
-- **CSV 출력**: 모든 링크를 구조화된 CSV 형식으로 저장
+- Docker 설치 ([Docker 설치 가이드](https://docs.docker.com/get-docker/))
+- Docker Compose 설치 (선택 사항, [Docker Compose 설치 가이드](https://docs.docker.com/compose/install/))
 
-## 설치
+## 빠른 시작
+
+### 1. 도커 이미지 빌드
 
 ```bash
-# 저장소 복제
-git clone https://github.com/yourusername/WebLinkExtractor.git
-cd WebLinkExtractor
-
-# 필요한 라이브러리 설치
-pip install -r requirements.txt
+docker build -t web-link-extractor .
 ```
 
-## 사용법
-
-### 명령행 옵션
-
-```
-usage: link-extractor.py [-h] [--url URL] [--directory DIRECTORY] [--base-url BASE_URL] [--output OUTPUT]
-
-웹페이지에서 링크를 추출하는 도구
-
-options:
-  -h, --help            도움말 표시
-  --url URL             링크를 추출할 웹페이지 URL
-  --directory DIRECTORY HTML 파일이 있는 디렉토리 경로
-  --base-url BASE_URL   상대 URL을 절대 URL로 변환할 때 사용할 기본 URL
-  --output OUTPUT       결과를 저장할 CSV 파일명 (기본값: 타임스탬프 포함 자동 생성)
-```
-
-### 사용 예시
+### 2. 도커 컨테이너 실행
 
 #### 웹 URL에서 링크 추출
 
 ```bash
-python link-extractor.py --url https://example.com
+docker run -v $(pwd)/data:/app/data web-link-extractor --url https://example.com --output /app/data/links.csv
 ```
 
 #### 로컬 HTML 파일에서 링크 추출
+먼저 HTML 파일을 `data` 디렉토리에 복사한 후 다음 명령어를 실행합니다:
 
 ```bash
-python link-extractor.py --directory ./samples/ --base-url https://example.com
+docker run -v $(pwd)/data:/app/data web-link-extractor --directory /app/data/samples --output /app/data/links.csv
 ```
 
-#### 출력 파일 지정
+## Docker Compose 사용하기
+
+더 간편한 사용을 위해 Docker Compose를 활용할 수 있습니다.
+
+### docker-compose.yml 수정
+
+`docker-compose.yml` 파일의 `command` 부분을 필요에 맞게 수정하세요:
+
+```yaml
+command: --url https://example.com --output /app/data/links.csv
+```
+
+### 실행
 
 ```bash
-python link-extractor.py --url https://example.com --output links.csv
+docker-compose up
 ```
 
-#### 웹 URL과 로컬 파일 모두에서 추출
+## 팁과 주의사항
+
+1. **데이터 디렉토리 관리**
+   - `data` 디렉토리는 컨테이너와 호스트 시스템 간에 공유됩니다.
+   - 결과물인 CSV 파일은 `data` 디렉토리에 저장됩니다.
+   - HTML 파일을 분석하려면 `data` 디렉토리 내에 배치해야 합니다.
+
+2. **경로 참조**
+   - 컨테이너 내에서 모든 경로는 `/app/data/`로 시작합니다.
+   - 예: 호스트의 `./data/samples` 디렉토리는 컨테이너 내에서 `/app/data/samples`입니다.
+
+3. **권한 문제**
+   - 권한 문제가 발생하면 다음 명령어로 데이터 디렉토리의 권한을 조정하세요:
+     ```bash
+     mkdir -p data
+     chmod 777 data
+     ```
+
+## 명령어 예시
+
+### 단일 웹페이지 분석
 
 ```bash
-python link-extractor.py --url https://example.com --directory ./samples/ --output combined_links.csv
+docker run -v $(pwd)/data:/app/data web-link-extractor --url https://example.com --output /app/data/example_links.csv
 ```
 
-## 출력 형식
+### 여러 HTML 파일 분석
 
-스크립트는 다음 열이 포함된 CSV 파일을 생성합니다:
-
-- `source`: 링크의 출처 (URL 또는 파일명)
-- `url`: 추출된 URL
-
-예시 출력:
-```
-source,url
-https://example.com,https://example.org/page1
-https://example.com,https://example.org/page2
-sample.html,https://example.org/page3
+```bash
+docker run -v $(pwd)/data:/app/data web-link-extractor --directory /app/data/html_files --base-url https://example.com --output /app/data/batch_links.csv
 ```
 
-## 요구 사항
+### 웹페이지와 로컬 파일 모두 분석
 
-- Python 3.6 이상
-- BeautifulSoup4
-- Pandas
-- Requests
-
-## 주의 사항
-
-- 너무 많은 요청을 빠르게 보내면 일부 웹사이트에서 IP가 차단될 수 있습니다.
-- 모든 웹사이트의 이용약관을 준수하세요.
-- 대규모 크롤링 작업에는 적절한 딜레이를 추가하는 것을 고려하세요.
-
-## 라이선스
-
-MIT License
+```bash
+docker run -v $(pwd)/data:/app/data web-link-extractor --url https://example.com --directory /app/data/html_files --output /app/data/combined_links.csv
+```
