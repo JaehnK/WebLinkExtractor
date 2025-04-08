@@ -1,13 +1,19 @@
 @echo off
 
 REM src 디렉토리로 이동
-cd src
+chcp 65001 > nul
+cd srcs
 
 REM 필요한 디렉토리 생성
 mkdir data 2>nul
 
 REM 도커 이미지 빌드
 docker build -t web-link-extractor .
+
+if %ERRORLEVEL% neq 0 (
+    echo 도커 이미지 빌드 실패!
+    goto :error
+)
 
 REM 스크립트 실행 도움말
 echo 웹 링크 추출기 실행 준비가 완료되었습니다.
@@ -22,5 +28,7 @@ echo.
 echo 도움말 보기:
 echo    docker run web-link-extractor --help
 
-REM 메인 디렉토리로 돌아가기 (필요한 경우)
-cd ..
+:error
+echo.
+echo 오류가 발생했습니다. 프로그램을 종료합니다.
+exit /b 1

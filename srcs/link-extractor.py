@@ -244,7 +244,7 @@ def main():
             csv_filename = args.output
         else:
             timestamp = strftime('%Y%m%d_%H%M%S', localtime(time()))
-            csv_filename = f'extracted_links_{timestamp}.csv'
+            csv_filename = f'/app/data/extracted_links_{timestamp}.csv'
         
         df.to_csv(csv_filename, index=False)
         print(f"링크 추출 완료: {len(df)} 개의 링크를 '{csv_filename}'에 저장했습니다.")
