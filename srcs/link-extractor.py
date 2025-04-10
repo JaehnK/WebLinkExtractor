@@ -12,8 +12,34 @@ import os
 import urllib.parse
 import requests
 import argparse
+import requests
+from urllib.parse import urlparse
 
-def extract_links(file_path, base_url=None):
+def process_wayback_url(url):
+    """
+    Wayback Machine URL에서 원본 URL을 추출하는 함수
+    
+    Parameters:
+    url (str): 처리할 Wayback Machine URL
+    
+    Returns:
+    str: 추출된 원본 URL 또는 원래 URL (Wayback Machine URL이 아닌 경우)
+    """
+    if 'web.archive.org/web/' in url:
+        # 원본 URL 추출 (/web/날짜/ 이후의 URL 부분)
+        parts = url.split('/web/', 1)
+        if len(parts) > 1:
+            timestamp_and_url = parts[1]
+            # 타임스탬프 이후의 URL만 추출
+            original_url_parts = timestamp_and_url.split('/', 1)
+            if len(original_url_parts) > 1:
+                return original_url_parts[1]
+    
+    return url
+
+
+
+def extract_links(file_path, wayback, base_url=None):
     """
     HTML 파일에서 모든 링크를 추출하는 함수
     
@@ -66,7 +92,13 @@ def extract_links(file_path, base_url=None):
         
         # 중복 제거 및 정렬
         unique_links = sorted(list(set(links)))
-        
+
+        if wayback:
+            print("Wayback True")
+            unique_links = [process_wayback_url(link) for link in unique_links]
+            # 처리 후 다시 중복 제거 및 정렬 (원본 URL 추출로 중복이 생길 수 있음)
+            unique_links = sorted(list(set(unique_links)))
+    
         return unique_links
     
     except Exception as e:
@@ -123,8 +155,6 @@ def extract_links_from_url(url):
     Returns:
     list: 추출된 유효한 링크 목록
     """
-    import requests
-    from urllib.parse import urlparse
     
     try:
         # URL에서 기본 도메인 추출
@@ -187,6 +217,7 @@ def main():
     parser.add_argument('--directory', help='HTML 파일이 있는 디렉토리 경로')
     parser.add_argument('--base-url', help='상대 URL을 절대 URL로 변환할 때 사용할 기본 URL')
     parser.add_argument('--output', help='결과를 저장할 CSV 파일명 (기본값: 타임스탬프 포함 자동 생성)')
+    parser.add_argument('--wayback', action='store_true', help='WayBack에서 다운로드한 html인가?', default=False)
     
     args = parser.parse_args()
     
@@ -222,7 +253,7 @@ def main():
                 print(f"  처리 중: {file_name}")
                 
                 # 링크 추출
-                links = extract_links(file_path, base_url)
+                links = extract_links(file_path, args.wayback, base_url)
                 
                 # 결과에 추가
                 if links:
